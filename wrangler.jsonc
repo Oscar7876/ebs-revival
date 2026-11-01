@@ -20,10 +20,14 @@
       { "name": "GAME", "class_name": "GameWorld" }
     ]
   },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_sqlite_classes": ["ChatRoom", "GameWorld"]
+  "exports": {
+    "ChatRoom": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    },
+    "GameWorld": {
+      "type": "durable-object",
+      "storage": "sqlite"
     }
-  ]
+  }
 }
