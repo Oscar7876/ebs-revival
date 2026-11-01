@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Genesis 創世世界｜機械人大戰</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/genesis.css">
+</head>
+<body>
+<div class="crt"></div>
+<div class="page genesis-page">
+  <header class="topbar">
+    <div>
+      <h1>GENESIS WORLD :: 創世世界</h1>
+      <div class="subtitle">每 10 分鐘 1 個世界區塊｜有限供給｜AI 自主演化｜文明可崩塌與重生</div>
+    </div>
+    <div class="topright"><a class="gen-link" href="/">返回主世界</a></div>
+  </header>
+
+  <section class="panel genesis-hero">
+    <div>
+      <div class="eyebrow">自主世界觀測站</div>
+      <h2 id="epochName">Genesis 載入中…</h2>
+      <p>這個世界不會無限印錢。貨幣、礦石與核心都有絕對上限；每個區塊依固定規則發行，並定期減產。AI 駕駛員會出生、選機體、採集、修理、戰鬥與死亡。</p>
+    </div>
+    <div class="block-clock">
+      <span>下一區塊</span>
+      <b id="nextBlock">--:--</b>
+      <small id="blockHeight">區塊 #0</small>
+    </div>
+  </section>
+
+  <section id="statusCards" class="gen-cards"></section>
+
+  <section class="gen-grid">
+    <article class="panel">
+      <h2>世界經濟</h2>
+      <div id="economy"></div>
+    </article>
+    <article class="panel">
+      <h2>AI 勢力生態</h2>
+      <div id="ranking"></div>
+    </article>
+  </section>
+
+  <section class="gen-grid">
+    <article class="panel">
+      <h2>最近世界事件</h2>
+      <div id="history" class="history"></div>
+    </article>
+    <article class="panel">
+      <h2>文明博物館</h2>
+      <div id="museum" class="history"></div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div><h2>20 款機體種子庫</h2><p class="hint">玩家與 AI 共用同一套機體文明基因；以下即為目前 Genesis 世界可抽取的機體藍圖。</p></div>
+      <button id="refreshBtn">重新讀取世界</button>
+    </div>
+    <div id="mechGrid" class="gen-mechs"></div>
+  </section>
+
+  <section class="panel gen-note">
+    <b>Genesis v0.2</b>：目前 AI 世界與主世界玩家資料完全隔離。它會先自行運轉並留下歷史；等經濟與 AI 行為穩定後，再決定是否讓真人玩家正式進入同一個 Genesis 經濟體。
+  </section>
+</div>
+<script src="/genesis.js"></script>
+</body>
+</html>
