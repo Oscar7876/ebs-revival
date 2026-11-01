@@ -1,7 +1,7 @@
 {
   "name": "ebs-revival-cloudflare",
   "private": true,
-  "version": "0.9.4",
+  "version": "0.9.4-hotfix.1",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
@@ -9,7 +9,7 @@
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^4.102.0"
+    "wrangler": "^4.156.0"
   },
   "cloudflare": {
     "bindings": {
