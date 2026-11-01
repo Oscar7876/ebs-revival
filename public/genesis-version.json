@@ -1,0 +1,7 @@
+{
+  "version": "0.9.4",
+  "channel": "production",
+  "branch": "main",
+  "features": ["equipment-shop-fix", "dungeons", "finite-reserve-rewards"],
+  "updatedAt": "2026-11-01T22:58:00+08:00"
+}
