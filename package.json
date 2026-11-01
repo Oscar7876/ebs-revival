@@ -1,0 +1,21 @@
+{
+  "name": "ebs-revival-cloudflare",
+  "private": true,
+  "version": "0.5.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:migrate": "wrangler d1 migrations apply DB --remote",
+    "deploy": "npm run db:migrate && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.48.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "DB": {"description": "機械人大戰玩家帳號與遊戲進度資料庫；部署時由 Cloudflare 自動建立。"},
+      "CHAT": {"description": "聊天室與線上狀態 Durable Object。"},
+      "GAME": {"description": "戰鬥與會改變玩家資料的遊戲操作 Durable Object。"}
+    }
+  }
+}
