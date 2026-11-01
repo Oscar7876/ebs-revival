@@ -1,44 +1,37 @@
 <!doctype html>
 <html lang="zh-Hant-TW">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Genesis 公版創世世界｜機械人大戰</title>
-  <link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/genesis.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/genesis.css?v=061">
 </head>
 <body>
 <div class="crt"></div>
 <div class="page genesis-page">
-  <header class="topbar"><div><h1>GENESIS WORLD :: 公版創世世界</h1><div class="subtitle">真人 × AI 共存｜命中・閃避・反擊・機體受損｜有限資源</div></div><div class="topright"><a class="gen-link" href="/">返回主世界</a></div></header>
-
-  <section class="panel genesis-hero">
-    <div><div class="eyebrow">PUBLIC GENESIS v0.4</div><h2 id="epochName">Genesis 載入中…</h2><p>每次出擊都有風險：攻擊可能失敗；防守方若仍存活且能源足夠，也可能立即反擊。重擊還可能造成推進器、瞄準、散熱或裝甲系統受損。</p></div>
-    <div class="block-clock"><span>下一區塊</span><b id="nextBlock">--:--</b><small id="blockHeight">區塊 #0</small></div>
-  </section>
-
+  <header class="topbar genesis-topbar">
+    <div>
+      <div class="eyebrow">PUBLIC GENESIS v0.6.1</div>
+      <h1>GENESIS WORLD :: 公版創世世界</h1>
+      <div class="subtitle">真人 × AI 共存｜有限資源｜武器・機體・強化統一戰鬥公式</div>
+    </div>
+    <div class="topright"><a class="gen-link" href="/">返回主世界</a></div>
+  </header>
+  <section class="panel genesis-hero"><div><h2 id="epochName">Genesis 載入中…</h2><p>每次攻擊都同時計算武器威力、命中、連擊、機體攻擊／裝甲／速度／瞄準，以及 Genesis 強化。主世界目前裝備的武器會同步到 Genesis。</p></div><div class="block-clock"><span>下一區塊</span><b id="nextBlock">--:--</b><small id="blockHeight">區塊 #0</small></div></section>
   <section id="statusCards" class="gen-cards"></section>
-
-  <section id="joinPanel" class="panel join-panel">
-    <h2>真人進入 Genesis</h2><p>使用目前已登入的主世界帳號直接加入。Genesis 資金、戰績與機體狀態獨立，不影響主世界。</p>
-    <button id="joinBtn">加入 Genesis 世界</button><div id="joinMsg" class="message"></div>
-  </section>
-
+  <section id="joinPanel" class="panel join-panel"><h2>真人進入 Genesis</h2><p>使用目前登入的主世界帳號直接加入。Genesis 資源與戰績獨立，但主世界目前裝備的武器會同步進 Genesis 戰鬥。</p><button id="joinBtn">加入 Genesis 世界</button><div id="joinMsg" class="message"></div></section>
   <main id="publicGame" class="hidden">
-    <section class="gen-grid public-grid">
-      <article class="panel"><h2>我的 Genesis 駕駛員</h2><div id="myActor"></div><div class="action-strip"><button id="mineBtn">資源採集</button><button id="restoreBtn">緊急整備</button></div><div id="battleMessage" class="message" style="margin-top:10px"></div></article>
-      <article class="panel"><h2>世界經濟</h2><div id="economy"></div></article>
-    </section>
-
-    <section class="gen-grid">
-      <article class="panel"><div class="section-heading"><h2>可攻擊目標</h2><button id="refreshBtn">重新整理</button></div><div id="targets" class="targets"></div></article>
-      <article class="panel"><h2>最近世界事件</h2><div id="history" class="history"></div></article>
-    </section>
-
-    <section class="panel"><h2>20 款機體資料庫</h2><p class="hint">附圖的 m01～m20 已依序對應到世界機體。透明圖資已修復；第一次正式選擇免費，之後更換需 Genesis G 整備費並保留目前 HP／EN 比例。</p><div id="mechGrid" class="gen-mechs"></div></section>
+    <nav class="gen-tabs" aria-label="Genesis 功能"><button class="tab-btn active" data-tab="cockpit">駕駛艙</button><button class="tab-btn" data-tab="gather">資源採集</button><button class="tab-btn" data-tab="battle">戰鬥</button><button class="tab-btn" data-tab="replay">戰鬥回放</button><button class="tab-btn" data-tab="hangar">機庫</button></nav>
+    <section class="tab-page active" id="tab-cockpit"><div class="gen-grid public-grid"><article class="panel"><h2>我的駕駛艙</h2><div id="myActor"></div><div class="action-strip"><button id="restoreBtn">緊急整備</button><button id="refreshBtn">同步狀態</button></div><div id="battleMessage" class="message"></div></article><article class="panel"><h2>世界經濟</h2><div id="economy"></div></article></div><article class="panel"><h2>世界事件</h2><div id="history" class="history wide"></div></article></section>
+    <section class="tab-page" id="tab-gather"><article class="panel"><h2>資源採集</h2><div id="resourceWallet" class="resource-grid"></div><p class="hint">不同任務有不同能源消耗、冷卻、風險與資源種類；採集模組強化會提高收益。</p><div id="gatherGrid" class="mission-grid"></div></article><article class="panel upgrade-panel"><h2>自體強化</h2><p class="hint">攻擊／裝甲每級 +3；速度／瞄準／散熱每級約 +2.5。最高 Lv.10。</p><div id="upgradeGrid" class="upgrade-grid"></div></article></section>
+    <section class="tab-page" id="tab-battle"><article class="panel"><div class="section-heading"><div><h2>戰鬥目標</h2><p class="hint">主動攻擊需能源回到 50%；反擊需約 35%。武器能源成本與冷卻也會影響能否出擊。</p></div><button id="battleRefreshBtn">重新整理</button></div><div id="targets" class="targets target-cards"></div></article></section>
+    <section class="tab-page" id="tab-replay"><article class="panel"><h2>最近 10 場戰鬥回顧</h2><p class="hint">包含你主動攻擊，以及離線時遭到真人／AI 攻擊。</p><div id="replayList" class="replay-list"></div></article></section>
+    <section class="tab-page" id="tab-hangar"><article class="panel"><h2>20 款正式機體</h2><p class="hint">第一次正式選擇免費；之後換機需 Genesis G。換機保留 HP／EN 比例，不能利用換機免費補滿。</p><div id="mechGrid" class="gen-mechs"></div></article><article class="panel"><h2>武器資料</h2><p class="hint">Genesis 目前同步你在主世界裝備中的武器。高價武器不再只是顯示：威力、命中、連擊、能源與武器特性都會進入戰鬥公式。</p><div id="weaponGrid" class="weapon-grid"></div></article></section>
   </main>
-
-  <section class="panel gen-note"><b>Genesis v0.4</b>：主動攻擊需 50% EN；反擊需約 35% EN。機體受損狀態約 20 分鐘，也可以用緊急整備提前修復。</section>
+  <section class="panel gen-note"><b>Genesis v0.6.1</b>：修復 v0.6 建置、正式機體圖、武器／機體／強化統一計算，以及 2 秒戰鬥動畫與 10 場回放。</section>
 </div>
-<script src="/genesis-sprite.js"></script>
-<script src="/genesis.js"></script>
-<script src="/genesis-art-ui.js"></script>
-</body></html>
+<div id="battleOverlay" class="battle-overlay" aria-hidden="true"><div class="battle-stage"><div class="battle-stage-head"><b>GENESIS 戰鬥重播</b><span id="battleStageWeapon"></span></div><div class="battle-field" id="battleField"><div class="fighter left" id="battleLeft"><img alt=""><b></b><small></small></div><div class="beam"></div><div class="impact"></div><div class="fighter right" id="battleRight"><img alt=""><b></b><small></small></div></div><div class="battle-result" id="battleResult"></div><button type="button" id="battleClose">關閉回放</button></div></div>
+<script src="/genesis.js?v=061"></script>
+</body>
+</html>
