@@ -8,10 +8,10 @@
 <body>
 <div class="crt"></div>
 <div class="page genesis-page">
-  <header class="topbar"><div><h1>GENESIS WORLD :: 公版創世世界</h1><div class="subtitle">真人 × AI 共存｜10 分鐘區塊｜有限資源｜自動恢復｜文明可重生</div></div><div class="topright"><a class="gen-link" href="/">返回主世界</a></div></header>
+  <header class="topbar"><div><h1>GENESIS WORLD :: 公版創世世界</h1><div class="subtitle">真人 × AI 共存｜命中・閃避・反擊・機體受損｜有限資源</div></div><div class="topright"><a class="gen-link" href="/">返回主世界</a></div></header>
 
   <section class="panel genesis-hero">
-    <div><div class="eyebrow">PUBLIC GENESIS</div><h2 id="epochName">Genesis 載入中…</h2><p>真人與 AI 共用同一個 Genesis 經濟體。能源會依機體性能按秒恢復；恢復到 50% 才能再次攻擊。你也能花 Genesis G 緊急整備，而這筆費用會永久銷毀。</p></div>
+    <div><div class="eyebrow">PUBLIC GENESIS v0.4</div><h2 id="epochName">Genesis 載入中…</h2><p>每次出擊都有風險：攻擊可能失敗；防守方若仍存活且能源足夠，也可能立即反擊。重擊還可能造成推進器、瞄準、散熱或裝甲系統受損。</p></div>
     <div class="block-clock"><span>下一區塊</span><b id="nextBlock">--:--</b><small id="blockHeight">區塊 #0</small></div>
   </section>
 
@@ -24,7 +24,7 @@
 
   <main id="publicGame" class="hidden">
     <section class="gen-grid public-grid">
-      <article class="panel"><h2>我的 Genesis 駕駛員</h2><div id="myActor"></div><div class="action-strip"><button id="mineBtn">資源採集</button><button id="restoreBtn">緊急整備</button></div></article>
+      <article class="panel"><h2>我的 Genesis 駕駛員</h2><div id="myActor"></div><div class="action-strip"><button id="mineBtn">資源採集</button><button id="restoreBtn">緊急整備</button></div><div id="battleMessage" class="message" style="margin-top:10px"></div></article>
       <article class="panel"><h2>世界經濟</h2><div id="economy"></div></article>
     </section>
 
@@ -33,10 +33,10 @@
       <article class="panel"><h2>最近世界事件</h2><div id="history" class="history"></div></article>
     </section>
 
-    <section class="panel"><h2>20 款機體資料庫</h2><p class="hint">附圖的 m01～m20 已依序對應到世界機體。第一次正式選擇免費；之後更換需支付 Genesis G 整備費，並保留目前 HP／EN 比例，因此換機不會免費恢復。</p><div id="mechGrid" class="gen-mechs"></div></section>
+    <section class="panel"><h2>20 款機體資料庫</h2><p class="hint">附圖的 m01～m20 已依序對應到世界機體。透明圖資已修復；第一次正式選擇免費，之後更換需 Genesis G 整備費並保留目前 HP／EN 比例。</p><div id="mechGrid" class="gen-mechs"></div></section>
   </main>
 
-  <section class="panel gen-note"><b>Genesis v0.3 公版</b>：AI 會在無人在線時持續運作；真人離線後仍存在於世界並可能遭攻擊。真人被擊毀後會進入 10 分鐘大修，也可以付費立即恢復。</section>
+  <section class="panel gen-note"><b>Genesis v0.4</b>：主動攻擊需 50% EN；反擊需約 35% EN。機體受損狀態約 20 分鐘，也可以用緊急整備提前修復。</section>
 </div>
 <script src="/genesis-sprite.js"></script>
 <script src="/genesis.js"></script>
