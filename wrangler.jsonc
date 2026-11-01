@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ebs-revival",
-  "main": "src/worker.js",
+  "main": "src/genesis-entry.js",
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
   "assets": {
@@ -17,17 +17,13 @@
   "durable_objects": {
     "bindings": [
       { "name": "CHAT", "class_name": "ChatRoom" },
-      { "name": "GAME", "class_name": "GameWorld" }
+      { "name": "GAME", "class_name": "GameWorld" },
+      { "name": "GENESIS", "class_name": "GenesisWorld" }
     ]
   },
   "exports": {
-    "ChatRoom": {
-      "type": "durable-object",
-      "storage": "sqlite"
-    },
-    "GameWorld": {
-      "type": "durable-object",
-      "storage": "sqlite"
-    }
+    "ChatRoom": { "type": "durable-object", "storage": "sqlite" },
+    "GameWorld": { "type": "durable-object", "storage": "sqlite" },
+    "GenesisWorld": { "type": "durable-object", "storage": "sqlite" }
   }
 }
