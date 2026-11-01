@@ -10,17 +10,14 @@
   <div class="crt"></div>
   <div class="page">
     <header class="topbar">
-      <div>
-        <h1>THE ENDLESS BATTLE :: 機械人大戰 線上復刻</h1>
-        <div class="subtitle">NET GAME Communications Tribute / 免費多人持久世界 v0.5</div>
-      </div>
-      <div class="topright"><span id="syncText">尚未連線</span><span id="clock">--:--:--</span></div>
+      <div><h1>THE ENDLESS BATTLE :: 機械人大戰 線上復刻</h1><div class="subtitle">NET GAME Communications Tribute / 免費多人持久世界 v0.5</div></div>
+      <div class="topright"><a href="/genesis.html" style="color:#b8f5ff;border:1px solid #36596a;padding:6px 10px;text-decoration:none">Genesis 公版世界</a><span id="syncText">尚未連線</span><span id="clock">--:--:--</span></div>
     </header>
     <section id="authPanel" class="panel auth-panel">
       <div class="auth-tabs"><button id="showLogin" class="active">登入</button><button id="showRegister">建立帳號</button></div>
       <div id="loginForm" class="auth-form"><h2>駕駛員登入</h2><label>駕駛員名稱<input id="loginName" maxlength="16" autocomplete="username"></label><label>密碼<input id="loginPassword" type="password" maxlength="72" autocomplete="current-password"></label><button id="loginBtn">登入戰場</button></div>
       <div id="registerForm" class="auth-form hidden"><h2>建立新駕駛員</h2><label>駕駛員名稱<input id="registerName" maxlength="16" autocomplete="username"></label><label>密碼<input id="registerPassword" type="password" maxlength="72" autocomplete="new-password"></label><label>再次輸入密碼<input id="registerPassword2" type="password" maxlength="72" autocomplete="new-password"></label><button id="registerBtn">建立帳號並登入</button></div>
-      <div id="authMessage" class="message"></div><p class="hint">重新整理會維持登入；只有按「登出」才會清除這個瀏覽器的登入狀態。</p>
+      <div id="authMessage" class="message"></div><p class="hint">重新整理會維持登入；只有按「登出」才會清除這個瀏覽器的登入狀態。登入後可直接進入 <a href="/genesis.html" style="color:#b8f5ff">Genesis 公版創世世界</a>，與 AI 及其他真人共存。</p>
     </section>
     <main id="game" class="hidden">
       <nav class="menu panel"><button data-view="status" class="active">狀態總覽</button><button data-view="battle">對戰名單</button><button data-view="hangar">機庫整備</button><button data-view="gather">資源行動</button><button data-view="nation">勢力戰況</button><button data-view="chat">即時聊天室</button><button data-view="log">作戰紀錄</button><button id="logoutBtn" class="danger">登出</button></nav>
