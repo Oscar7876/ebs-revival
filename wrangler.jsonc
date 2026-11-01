@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ebs-revival",
-  "main": "src/index.js",
+  "main": "src/worker.js",
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
   "assets": {
@@ -22,8 +22,10 @@
       { "name": "GAME", "class_name": "GameWorld" }
     ]
   },
-  "exports": {
-    "ChatRoom": { "type": "durable-object", "storage": "sqlite" },
-    "GameWorld": { "type": "durable-object", "storage": "sqlite" }
-  }
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["ChatRoom", "GameWorld"]
+    }
+  ]
 }
