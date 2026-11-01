@@ -8,37 +8,20 @@
 <body>
 <div class="crt"></div>
 <div class="page genesis-page">
-  <header class="topbar"><div><h1>GENESIS WORLD :: 公版創世世界</h1><div class="subtitle">真人 × AI 共存｜命中・閃避・反擊・機體受損｜有限資源</div></div><div class="topright"><a class="gen-link" href="/">返回主世界</a></div></header>
-
-  <section class="panel genesis-hero">
-    <div><div class="eyebrow">PUBLIC GENESIS v0.4</div><h2 id="epochName">Genesis 載入中…</h2><p>每次出擊都有風險：攻擊可能失敗；防守方若仍存活且能源足夠，也可能立即反擊。重擊還可能造成推進器、瞄準、散熱或裝甲系統受損。</p></div>
-    <div class="block-clock"><span>下一區塊</span><b id="nextBlock">--:--</b><small id="blockHeight">區塊 #0</small></div>
-  </section>
-
+  <header class="topbar"><div><h1>GENESIS WORLD :: 公版創世世界</h1><div class="subtitle">真人 × AI 共存｜有限資源｜自主成長｜戰鬥可回放｜文明可重生</div></div><div class="topright"><a class="gen-link" href="/">返回主世界</a></div></header>
+  <section class="panel genesis-hero"><div><div class="eyebrow">PUBLIC GENESIS v0.5</div><h2 id="epochName">Genesis 載入中…</h2><p>AI 與真人共享同一個世界。AI 每個世界區塊只能選擇有限行動；真人則依能源、冷卻與採集時間自由操作。所有戰鬥會留下可回放紀錄。</p></div><div class="block-clock"><span>下一區塊</span><b id="nextBlock">--:--</b><small id="blockHeight">區塊 #0</small></div></section>
   <section id="statusCards" class="gen-cards"></section>
-
-  <section id="joinPanel" class="panel join-panel">
-    <h2>真人進入 Genesis</h2><p>使用目前已登入的主世界帳號直接加入。Genesis 資金、戰績與機體狀態獨立，不影響主世界。</p>
-    <button id="joinBtn">加入 Genesis 世界</button><div id="joinMsg" class="message"></div>
-  </section>
-
+  <section id="joinPanel" class="panel join-panel"><h2>真人進入 Genesis</h2><p>使用目前主世界帳號直接加入。Genesis 資產與主世界分開。</p><button id="joinBtn">加入 Genesis 世界</button><div id="joinMsg" class="message"></div></section>
   <main id="publicGame" class="hidden">
-    <section class="gen-grid public-grid">
-      <article class="panel"><h2>我的 Genesis 駕駛員</h2><div id="myActor"></div><div class="action-strip"><button id="mineBtn">資源採集</button><button id="restoreBtn">緊急整備</button></div><div id="battleMessage" class="message" style="margin-top:10px"></div></article>
-      <article class="panel"><h2>世界經濟</h2><div id="economy"></div></article>
-    </section>
-
-    <section class="gen-grid">
-      <article class="panel"><div class="section-heading"><h2>可攻擊目標</h2><button id="refreshBtn">重新整理</button></div><div id="targets" class="targets"></div></article>
-      <article class="panel"><h2>最近世界事件</h2><div id="history" class="history"></div></article>
-    </section>
-
-    <section class="panel"><h2>20 款機體資料庫</h2><p class="hint">附圖的 m01～m20 已依序對應到世界機體。透明圖資已修復；第一次正式選擇免費，之後更換需 Genesis G 整備費並保留目前 HP／EN 比例。</p><div id="mechGrid" class="gen-mechs"></div></section>
+    <section class="gen-grid public-grid"><article class="panel"><h2>我的 Genesis 駕駛員</h2><div id="myActor"></div><div class="action-strip"><button id="restoreBtn">緊急整備</button><button id="refreshBtn">重新整理</button></div></article><article class="panel"><h2>世界經濟</h2><div id="economy"></div></article></section>
+    <section class="panel"><div class="section-heading"><div><h2>資源採集</h2><p class="hint">每種採集有不同冷卻、收益與風險；世界資源池有限，並隨區塊減產。</p></div></div><div id="gatherGrid" class="gather-grid"></div></section>
+    <section class="gen-grid"><article class="panel"><h2>機體強化</h2><div id="upgradeGrid" class="upgrade-grid"></div></article><article class="panel"><h2>最近 10 場我的戰鬥回放</h2><div id="replayList" class="replay-list"></div></article></section>
+    <section class="gen-grid"><article class="panel"><h2>可攻擊目標</h2><div id="targets" class="targets"></div></article><article class="panel"><h2>最近世界事件</h2><div id="history" class="history"></div></article></section>
+    <section class="panel"><h2>20 款機體資料庫</h2><p class="hint">附圖 m01～m20 已一一對應。第一次選擇免費；之後換機需付整備費，且保留目前 HP／EN 比例。</p><div id="mechGrid" class="gen-mechs"></div></section>
   </main>
-
-  <section class="panel gen-note"><b>Genesis v0.4</b>：主動攻擊需 50% EN；反擊需約 35% EN。機體受損狀態約 20 分鐘，也可以用緊急整備提前修復。</section>
+  <section class="panel gen-note"><b>Genesis v0.5</b>：AI 每 10 分鐘最多執行一次主要動作，會自行採集、維修、強化或攻擊。真人被離線攻擊的戰鬥，也會出現在自己的最近 10 場回放。</section>
 </div>
-<script src="/genesis-sprite.js"></script>
+<div id="battleModal" class="battle-modal hidden" aria-live="polite"><div class="battle-stage"><button id="closeBattle" class="battle-close" type="button">×</button><div class="battle-title" id="battleTitle">戰鬥回放</div><div class="fighter left"><div id="battleAArt" class="battle-mech"></div><b id="battleAName">-</b><div id="battleAHp">HP</div></div><div class="battle-center"><div id="battleBeam" class="battle-beam"></div><div id="battleResult">交戰中…</div></div><div class="fighter right"><div id="battleBArt" class="battle-mech"></div><b id="battleBName">-</b><div id="battleBHp">HP</div></div></div></div>
+<script src="/genesis-mech-art-1.js"></script><script src="/genesis-mech-art-2.js"></script><script src="/genesis-mech-art-3.js"></script><script src="/genesis-mech-art-4.js"></script>
 <script src="/genesis.js"></script>
-<script src="/genesis-art-ui.js"></script>
 </body></html>
