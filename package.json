@@ -1,7 +1,7 @@
 {
   "name": "ebs-revival-cloudflare",
   "private": true,
-  "version": "0.5.1",
+  "version": "0.9.4",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
@@ -13,9 +13,10 @@
   },
   "cloudflare": {
     "bindings": {
-      "DB": {"description": "機械人大戰玩家帳號與遊戲進度資料庫；由 Cloudflare 自動建立與綁定。"},
+      "DB": {"description": "機械人大戰玩家帳號與遊戲進度資料庫；正式 main 部署沿用既有 D1 綁定。"},
       "CHAT": {"description": "聊天室與線上狀態 Durable Object。"},
-      "GAME": {"description": "戰鬥與會改變玩家資料的遊戲操作 Durable Object。"}
+      "GAME": {"description": "主世界戰鬥與會改變玩家資料的遊戲操作 Durable Object。"},
+      "GENESIS": {"description": "Genesis 公版世界、AI、裝備、資源、副本與社交狀態 Durable Object。"}
     }
   }
 }
