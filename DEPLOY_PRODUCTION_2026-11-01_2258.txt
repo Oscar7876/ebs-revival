@@ -1,0 +1,5 @@
+Production deploy trigger
+Target: main
+Version: Genesis v0.9.4
+Triggered: 2026-11-01 22:58 Asia/Taipei
+Purpose: trigger Cloudflare production deployment after preview-build fixes.
