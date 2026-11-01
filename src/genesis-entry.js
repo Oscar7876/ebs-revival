@@ -1,5 +1,5 @@
 import stable, { GameWorld, ChatRoom } from './worker.js';
-import { GenesisWorld } from './genesis-world.js';
+import { GenesisWorld } from './genesis-selectable.js';
 import { publicGenesisMeta } from './genesis-config.js';
 
 export { GameWorld, ChatRoom, GenesisWorld };
@@ -31,11 +31,7 @@ export default {
     if(url.pathname==='/api/genesis/meta')return json(publicGenesisMeta());
     if(url.pathname==='/api/genesis/state')return genesisRequest(request,env,'/state');
     if(url.pathname==='/api/genesis/join'&&request.method==='POST')return genesisRequest(request,env,'/join','POST');
-    if(url.pathname==='/api/genesis/action'&&request.method==='POST'){
-      const body=await request.clone().json().catch(()=>({}));
-      if(body.action==='selectMech')return json({error:'公版初期暫不開放即時切換機體，避免利用切換免費恢復 HP / EN。'},400);
-      return genesisRequest(request,env,'/action','POST');
-    }
+    if(url.pathname==='/api/genesis/action'&&request.method==='POST')return genesisRequest(request,env,'/action','POST');
     return stable.fetch(request,env,ctx);
   }
 };
