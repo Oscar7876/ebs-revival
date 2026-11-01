@@ -1,5 +1,5 @@
 import stable, { GameWorld, ChatRoom } from './worker.js';
-import { GenesisWorld } from './genesis-v05.js';
+import { GenesisWorld } from './genesis-v061.js';
 import { publicGenesisMeta } from './genesis-config.js';
 
 export { GameWorld, ChatRoom, GenesisWorld };
