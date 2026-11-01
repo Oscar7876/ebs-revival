@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>THE ENDLESS BATTLE - 機械人大戰 線上復刻 v0.5</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="crt"></div>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <h1>THE ENDLESS BATTLE :: 機械人大戰 線上復刻</h1>
+        <div class="subtitle">NET GAME Communications Tribute / 免費多人持久世界 v0.5</div>
+      </div>
+      <div class="topright"><span id="syncText">尚未連線</span><span id="clock">--:--:--</span></div>
+    </header>
+    <section id="authPanel" class="panel auth-panel">
+      <div class="auth-tabs"><button id="showLogin" class="active">登入</button><button id="showRegister">建立帳號</button></div>
+      <div id="loginForm" class="auth-form"><h2>駕駛員登入</h2><label>駕駛員名稱<input id="loginName" maxlength="16" autocomplete="username"></label><label>密碼<input id="loginPassword" type="password" maxlength="72" autocomplete="current-password"></label><button id="loginBtn">登入戰場</button></div>
+      <div id="registerForm" class="auth-form hidden"><h2>建立新駕駛員</h2><label>駕駛員名稱<input id="registerName" maxlength="16" autocomplete="username"></label><label>密碼<input id="registerPassword" type="password" maxlength="72" autocomplete="new-password"></label><label>再次輸入密碼<input id="registerPassword2" type="password" maxlength="72" autocomplete="new-password"></label><button id="registerBtn">建立帳號並登入</button></div>
+      <div id="authMessage" class="message"></div><p class="hint">重新整理會維持登入；只有按「登出」才會清除這個瀏覽器的登入狀態。</p>
+    </section>
+    <main id="game" class="hidden">
+      <nav class="menu panel"><button data-view="status" class="active">狀態總覽</button><button data-view="battle">對戰名單</button><button data-view="hangar">機庫整備</button><button data-view="gather">資源行動</button><button data-view="nation">勢力戰況</button><button data-view="chat">即時聊天室</button><button data-view="log">作戰紀錄</button><button id="logoutBtn" class="danger">登出</button></nav>
+      <section class="grid-shell"><aside class="panel sidebar"><h3>駕駛員</h3><div class="kv"><span>名稱</span><b id="pilotLabel">-</b></div><div class="kv"><span>等級</span><b id="levelLabel">1</b></div><div class="kv"><span>階級</span><b id="rankLabel">F</b></div><div class="kv"><span>資金</span><b id="moneyLabel">0</b></div><div class="kv"><span>礦石</span><b id="oreLabel">0</b></div><div class="kv"><span>勝 / 敗</span><b id="wlLabel">0 / 0</b></div><div class="kv"><span>所屬勢力</span><b id="nationLabel">無所屬</b></div><div class="kv"><span>線上人數</span><b id="onlineCount">0</b></div><h3>機體</h3><div class="mech-card"><div class="mech-art"><img id="mechImage" alt="機體"></div><div><div class="mech-name" id="mechName">先鋒原型一號</div><div class="small" id="mechClass">平衡型</div></div></div><div class="bar-wrap"><span>耐久</span><div class="bar"><i id="hpBar"></i></div><b id="hpText"></b></div><div class="bar-wrap"><span>能源</span><div class="bar"><i id="enBar"></i></div><b id="enText"></b></div><div class="bar-wrap"><span>熱量</span><div class="bar heat"><i id="heatBar"></i></div><b id="heatText"></b></div><div class="status-line" id="statusLine">狀態：正常</div><div class="cooldown-box" id="cooldownBox">武裝就緒</div></aside><section class="panel content"><div id="view-status" class="view"></div><div id="view-battle" class="view hidden"></div><div id="view-hangar" class="view hidden"></div><div id="view-gather" class="view hidden"></div><div id="view-nation" class="view hidden"></div><div id="view-chat" class="view hidden"></div><div id="view-log" class="view hidden"></div></section></section>
+    </main>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+  <script src="/game.js"></script>
+</body>
+</html>
