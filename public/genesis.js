@@ -1,47 +1,10 @@
-const $=s=>document.querySelector(s);
-let META=null,STATE=null,timer=null;
-const fmt=n=>Number(n||0).toLocaleString('zh-TW');
-const pct=(a,b)=>b?Math.max(0,Math.min(100,a/b*100)):0;
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const when=t=>new Date(t).toLocaleString('zh-TW',{hour12:false});
-
-async function api(path){const r=await fetch(path,{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||`伺服器錯誤 ${r.status}`);return d;}
-function card(label,value,cls=''){return `<div class="gen-card ${cls}"><span>${label}</span><b>${value}</b></div>`;}
-function meter(label,value,cap,unit=''){const p=pct(value,cap);return `<div class="eco-row"><div class="eco-head"><span>${label}</span><b>${fmt(value)}${unit} / ${fmt(cap)}${unit}</b></div><div class="meter"><i style="width:${p}%"></i></div><small>${p.toFixed(3)}%</small></div>`;}
-
-function render(){if(!META||!STATE)return;const s=STATE,m=META.world;
-  $('#epochName').textContent=s.epochName;
-  $('#blockHeight').textContent=`區塊 #${fmt(s.blockHeight)}｜文明 ${s.epoch}`;
-  const healthCls=s.health<m.health.redBelow?'danger':s.health<m.health.yellowBelow?'warn':'good';
-  $('#statusCards').innerHTML=[
-    card('世界健康',`${s.health} / 100`,healthCls),
-    card('存活 AI',fmt(s.population)),
-    card('累計出生',fmt(s.totalBirths)),
-    card('累計死亡',fmt(s.totalDeaths)),
-    card('累計戰鬥',fmt(s.totalBattles))
-  ].join('');
-
-  $('#economy').innerHTML=
-    meter('貨幣已發行',s.issued.currency,s.caps.currency,' G')+
-    meter('礦石已發行',s.issued.ore,s.caps.ore)+
-    meter('核心已發行',s.issued.core,s.caps.core)+
-    `<div class="eco-row"><div class="eco-head"><span>世界金庫</span><b>${fmt(s.treasury.currency)} G / 礦石 ${fmt(s.treasury.ore)} / 核心 ${fmt(s.treasury.core)}</b></div></div>`+
-    `<div class="eco-row"><div class="eco-head"><span>永久銷毀</span><b>${fmt(s.burned.currency)} G / 礦石 ${fmt(s.burned.ore)}</b></div></div>`;
-
-  const ranks=s.topNPCs||[];
-  $('#ranking').innerHTML=ranks.length?`<table class="rank-table"><thead><tr><th>#</th><th>AI</th><th>人格</th><th>機體</th><th>Lv</th><th>擊破</th></tr></thead><tbody>${ranks.map((n,i)=>`<tr><td>${i+1}</td><td>${esc(n.name)}</td><td>${esc(n.archetypeName)}</td><td>${esc(n.mechName)}</td><td>${n.level}</td><td>${n.kills}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">世界尚無存活 AI。</div>';
-
-  $('#history').innerHTML=(s.history||[]).map(x=>`<div class="event">${esc(x.text)}<time>${when(x.t)}</time></div>`).join('')||'<div class="empty">尚無世界事件。</div>';
-  $('#museum').innerHTML=(s.museum||[]).map(x=>`<div class="event"><b>${esc(x.name)}</b><br>區塊 ${fmt(x.blocks)}｜出生 ${fmt(x.totalBirths)}｜死亡 ${fmt(x.totalDeaths)}｜戰鬥 ${fmt(x.totalBattles)}${x.strongest?`<br>最強 AI：${esc(x.strongest.name)}（擊破 ${x.strongest.kills}）`:''}<br>終結：${esc(x.reason)}<time>${when(x.endedAt)}</time></div>`).join('')||'<div class="empty">目前仍是第一個文明，尚未產生滅亡紀錄。</div>';
-
-  const mechs=META.mechs||[];
-  $('#mechGrid').innerHTML=mechs.map(x=>`<article class="gen-mech"><div class="gen-art"><img src="${x.art}" alt="${esc(x.name)}"></div><h3>${esc(x.name)}</h3><div class="gen-meta">${esc(x.class)}｜${esc(x.id.toUpperCase())}</div><div class="gen-desc">${esc(x.desc)}</div><div class="mini-stats"><span>耐久 ${x.hp}</span><span>能源 ${x.en}</span><span>攻擊 ${x.atk}</span><span>裝甲 ${x.armor}</span><span>速度 ${x.speed}</span><span>命中 ${x.aim}</span><span>散熱 ${x.cooling}</span><span>載重 ${x.maxLoad}</span></div></article>`).join('');
-  tickClock();
-}
-
-function tickClock(){clearInterval(timer);const draw=()=>{if(!STATE)return;const ms=Math.max(0,STATE.nextBlockAt-Date.now()),sec=Math.ceil(ms/1000),min=Math.floor(sec/60);$('#nextBlock').textContent=`${String(min).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;if(ms<=0){clearInterval(timer);setTimeout(loadState,1800);}};draw();timer=setInterval(draw,1000);}
-
-async function loadState(){try{STATE=await api('/api/genesis/state');render();}catch(e){$('#epochName').textContent='Genesis 世界讀取失敗：'+e.message;}}
-async function init(){try{[META,STATE]=await Promise.all([api('/api/genesis/meta'),api('/api/genesis/state')]);render();}catch(e){$('#epochName').textContent='Genesis 世界啟動失敗：'+e.message;}}
-$('#refreshBtn').onclick=loadState;
-init();
+const $=s=>document.querySelector(s);let STATE=null,snapshotAt=0,clockTimer=null,localTimer=null,refreshTimer=null;const fmt=n=>Number(n||0).toLocaleString('zh-TW');const pct=(a,b)=>b?Math.max(0,Math.min(100,a/b*100)):0;const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const when=t=>new Date(t).toLocaleString('zh-TW',{hour12:false});
+async function api(path,opt={}){const r=await fetch(path,{credentials:'same-origin',cache:'no-store',headers:{'content-type':'application/json',...(opt.headers||{})},...opt});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||`伺服器錯誤 ${r.status}`);return d;}
+function card(label,value,cls=''){return `<div class="gen-card ${cls}"><span>${label}</span><b>${value}</b></div>`;}function meter(label,value,cap,unit='',cls=''){const p=pct(value,cap);return `<div class="eco-row"><div class="eco-head"><span>${label}</span><b>${fmt(Math.round(value))}${unit} / ${fmt(cap)}${unit}</b></div><div class="meter ${cls}"><i style="width:${p}%"></i></div><small>${p.toFixed(1)}%</small></div>`;}
+function localActor(){if(!STATE?.myActor)return null;const a={...STATE.myActor},dt=Math.max(0,(Date.now()-snapshotAt)/1000);if(a.alive){a.en=Math.min(a.maxEn,a.en+dt*a.energyRegenPerSec);a.hp=Math.min(a.maxHp,a.hp+dt*a.hpRegenPerSec);}a.attackReady=a.alive&&a.en>=a.attackAtEnergy&&a.cooldownUntil<=Date.now();return a;}
+function renderActor(){const a=localActor();if(!a)return;$('#myActor').innerHTML=`<div class="actor-card"><img src="${a.art}" alt="${esc(a.mechName)}"><h3>${esc(a.name)}</h3><div class="gen-meta">${esc(a.mechName)}｜${esc(a.mechClass)}</div><div class="actor-kv"><span>Genesis G</span><b>${fmt(a.money)}</b></div><div class="actor-kv"><span>礦石</span><b>${fmt(a.ore)}</b></div>${meter('耐久',a.hp,a.maxHp,'','hp')}${meter('能源',a.en,a.maxEn,'','energy')}<div class="small-note">能源恢復：+${a.energyRegenPerSec}/秒｜耐久恢復：+${a.hpRegenPerSec}/秒<br>攻擊門檻：${a.attackAtEnergy}/${a.maxEn}（50%）｜${a.alive?(a.attackReady?'武裝就緒':'能源／冷卻恢復中'):`大修剩餘 ${Math.max(0,Math.ceil((a.destroyedUntil-Date.now())/1000))} 秒`}</div></div>`;$('#restoreBtn').textContent=`緊急整備 ${fmt(a.emergencyCost)} G`;document.querySelectorAll('.attackBtn').forEach(b=>b.disabled=!a.attackReady);}
+function render(){if(!STATE)return;const s=STATE;$('#epochName').textContent=s.epochName;$('#blockHeight').textContent=`區塊 #${fmt(s.blockHeight)}｜文明 ${s.epoch}`;const hc=s.health<20?'danger':s.health<45?'warn':'good';$('#statusCards').innerHTML=[card('世界健康',`${s.health} / 100`,hc),card('存活 AI',fmt(s.population.ai)),card('真人駕駛員',fmt(s.population.human)),card('流通角色',fmt(s.population.living)),card('減產 Era',fmt(s.era))].join('');$('#economy').innerHTML=meter('貨幣已發行',s.issued.currency,s.rules.currencyCap,' G')+meter('礦石已發行',s.issued.ore,s.rules.oreCap)+meter('核心已發行',s.issued.core,s.rules.coreCap)+`<div class="eco-row"><div class="eco-head"><span>世界儲備</span><b>${fmt(s.reserve.currency)} G / 礦石 ${fmt(s.reserve.ore)}</b></div></div><div class="eco-row"><div class="eco-head"><span>永久銷毀</span><b>${fmt(s.burned.currency)} G</b></div></div><div class="small-note">本區塊發行：${fmt(s.currentBlockReward.currency)} G / ${fmt(s.currentBlockReward.ore)} 礦石。每 ${fmt(s.rules.halvingEveryBlocks)} 區塊減產。</div>`;if(s.myActor){$('#joinPanel').classList.add('hidden');$('#publicGame').classList.remove('hidden');renderActor();const me=s.myActor.id;$('#targets').innerHTML=(s.actors||[]).filter(x=>x.id!==me).slice(0,60).map(x=>`<div class="target"><div><b>${x.type==='human'?'真人':'AI'}｜${esc(x.name)}</b><div class="target-meta">${esc(x.mechName)}｜HP ${x.hp}/${x.maxHp}｜EN ${x.en}/${x.maxEn}｜${esc(x.archetypeName)}</div></div><button class="attackBtn" data-id="${x.id}" ${s.myActor.attackReady?'':'disabled'}>攻擊</button></div>`).join('')||'<div class="empty">目前沒有可攻擊目標。</div>';document.querySelectorAll('.attackBtn').forEach(b=>b.onclick=()=>act('attack',{targetId:b.dataset.id}));}else{$('#joinPanel').classList.remove('hidden');$('#publicGame').classList.add('hidden');}$('#history').innerHTML=(s.events||[]).map(x=>`<div class="event">${esc(x.text)}<time>${when(x.t)}</time></div>`).join('')||'<div class="empty">尚無世界事件。</div>';$('#mechGrid').innerHTML=(s.mechs||[]).map(x=>`<article class="gen-mech"><div class="gen-art"><img src="${x.art}" alt="${esc(x.name)}"></div><h3>${esc(x.name)}</h3><div class="gen-meta">${esc(x.class)}｜${esc(x.id.toUpperCase())}</div><div class="gen-desc">${esc(x.desc)}</div><div class="mini-stats"><span>耐久 ${x.hp}</span><span>能源 ${x.en}</span><span>攻擊 ${x.atk}</span><span>裝甲 ${x.armor}</span><span>速度 ${x.speed}</span><span>散熱 ${x.cooling}</span><span>EN 回復 ${x.energyRegenPerSec}/秒</span><span>HP 回復 ${x.hpRegenPerSec}/秒</span><span>攻擊門檻 ${x.attackAtEnergy}</span></div></article>`).join('');tickClock();}
+function tickClock(){clearInterval(clockTimer);const draw=()=>{if(!STATE)return;const sec=Math.max(0,Math.ceil((STATE.nextBlockAt-Date.now())/1000));$('#nextBlock').textContent=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;};draw();clockTimer=setInterval(draw,1000);}
+async function load(){try{STATE=await api('/api/genesis/state');snapshotAt=Date.now();render();$('#joinMsg').textContent='';}catch(e){$('#joinMsg').textContent=e.message;}}
+async function act(action,extra={}){try{const d=await api('/api/genesis/action',{method:'POST',body:JSON.stringify({action,...extra})});STATE=d.state;snapshotAt=Date.now();render();$('#joinMsg').textContent='';}catch(e){$('#joinMsg').textContent=e.message;}}
+$('#joinBtn').onclick=async()=>{try{const d=await api('/api/genesis/join',{method:'POST',body:'{}'});STATE=d.state;snapshotAt=Date.now();render();}catch(e){$('#joinMsg').innerHTML=`${esc(e.message)}　<a href="/">回主世界登入</a>`;}};$('#mineBtn').onclick=()=>act('mine');$('#restoreBtn').onclick=()=>act('restore');$('#refreshBtn').onclick=load;load();localTimer=setInterval(renderActor,1000);refreshTimer=setInterval(load,30000);
