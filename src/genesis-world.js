@@ -1,252 +1,38 @@
-import { MECHS } from './catalog.js';
-import { GENESIS_WORLD, NPC_ARCHETYPES, rewardAt, spawnChance } from './genesis-config.js';
+import { MECHS, mechById } from './catalog.js';
 
+const BLOCK_MS=10*60*1000;
+const CAP={currency:100000000,ore:10000000,core:100000};
+const HALVING_BLOCKS=1008,START_AI=24,COMFORT_POP=150,SOFT_CAP=300,HARD_CAP=500;
+const now=()=>Date.now(),clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),pick=a=>a[Math.floor(Math.random()*a.length)];
 const json=(x,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
-const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-const pick=a=>a[Math.floor(Math.random()*a.length)];
-const round=n=>Math.round(n*100)/100;
-const nextBoundary=()=>Math.ceil(Date.now()/GENESIS_WORLD.blockIntervalMs)*GENESIS_WORLD.blockIntervalMs;
-
-function npcName(serial){return `AI-${String(serial).padStart(4,'0')}`;}
-function mech(id){return MECHS.find(x=>x.id===id)||MECHS[0];}
-
-function newNPC(serial,block,treasury){
-  const m=pick(MECHS), archetype=pick(NPC_ARCHETYPES);
-  const money=Math.min(treasury.currency,300+Math.floor(Math.random()*301));
-  const ore=Math.min(treasury.ore,6+Math.floor(Math.random()*10));
-  treasury.currency-=money; treasury.ore-=ore;
-  return {
-    id:`npc-${serial}`,
-    name:npcName(serial),
-    bornBlock:block,
-    ageBlocks:0,
-    archetype:archetype.id,
-    archetypeName:archetype.name,
-    mechId:m.id,
-    mechName:m.name,
-    hp:m.hp,
-    maxHp:m.hp,
-    level:1,
-    exp:0,
-    money,
-    ore,
-    kills:0,
-    losses:0,
-    lastEnemy:null,
-    status:'存活'
-  };
-}
-
-function initialState(){
-  const t=Date.now();
-  const s={
-    epoch:1,
-    epochName:'WORLD I — Genesis',
-    createdAt:t,
-    blockHeight:0,
-    nextBlockAt:nextBoundary(),
-    lastBlockAt:0,
-    npcSerial:0,
-    npcs:[],
-    deadCount:0,
-    treasury:{currency:18000,ore:1500,core:20},
-    issued:{currency:18000,ore:1500,core:20},
-    burned:{currency:0,ore:0,core:0},
-    health:100,
-    lowHealthStreak:0,
-    totalBattles:0,
-    totalBirths:0,
-    totalDeaths:0,
-    history:[],
-    museum:[]
-  };
-  for(let i=0;i<GENESIS_WORLD.population.seedNPCs;i++){
-    s.npcSerial++; s.npcs.push(newNPC(s.npcSerial,0,s.treasury)); s.totalBirths++;
-  }
-  s.history.push({t,text:`${s.epochName} 創世完成，${s.npcs.length} 名 AI 駕駛員甦醒。`});
-  return s;
-}
-
-function addHistory(s,text){
-  s.history.unshift({t:Date.now(),text});
-  s.history=s.history.slice(0,80);
-}
-
-function distributeEmission(s,reward){
-  const ec=GENESIS_WORLD.economy;
-  const c=Math.min(reward.currency,ec.totalCurrencyCap-s.issued.currency);
-  const o=Math.min(reward.ore,ec.totalOreCap-s.issued.ore);
-  const k=Math.min(reward.core,ec.totalCoreCap-s.issued.core);
-  s.issued.currency+=c; s.issued.ore+=o; s.issued.core+=k;
-  s.treasury.currency+=c; s.treasury.ore+=o; s.treasury.core+=k;
-  return {currency:c,ore:o,core:k};
-}
-
-function maybeBirth(s){
-  const chance=spawnChance(s.npcs.length);
-  if(Math.random()>=chance)return null;
-  s.npcSerial++;
-  const n=newNPC(s.npcSerial,s.blockHeight,s.treasury);
-  s.npcs.push(n); s.totalBirths++;
-  addHistory(s,`${n.name} 出生，選擇 ${n.mechName}，人格為「${n.archetypeName}」。`);
-  return n;
-}
-
-function repair(s,n){
-  if(n.hp>=n.maxHp*.72)return false;
-  const cost=Math.min(n.money,Math.max(20,Math.round((n.maxHp-n.hp)*0.09)));
-  if(cost<=0)return false;
-  const burn=Math.ceil(cost*GENESIS_WORLD.economy.repairBurnRate);
-  const returnToTreasury=cost-burn;
-  n.money-=cost; s.burned.currency+=burn; s.treasury.currency+=returnToTreasury;
-  n.hp=Math.min(n.maxHp,n.hp+Math.round(n.maxHp*(.30+Math.random()*.25)));
-  addHistory(s,`${n.name} 花費 ${cost} G 進行維修。`);
-  return true;
-}
-
-function harvest(s,n){
-  const gainC=Math.min(s.treasury.currency,30+Math.floor(Math.random()*91));
-  const gainO=Math.min(s.treasury.ore,1+Math.floor(Math.random()*6));
-  if(gainC<=0&&gainO<=0)return false;
-  s.treasury.currency-=gainC; s.treasury.ore-=gainO;
-  n.money+=gainC; n.ore+=gainO;
-  if(Math.random()<.12&&s.treasury.core>0){s.treasury.core--; n.core=(n.core||0)+1;}
-  return true;
-}
-
-function combatPower(n){
-  const m=mech(n.mechId);
-  return (m.atk*1.35+m.armor+m.speed*.85+m.aim*.75)*(1+(n.level-1)*.035)*(n.hp/n.maxHp);
-}
-
-function fight(s,a,d){
-  const ap=combatPower(a)*(0.82+Math.random()*.38);
-  const dp=combatPower(d)*(0.82+Math.random()*.38);
-  const am=mech(a.mechId), dm=mech(d.mechId);
-  const dmgToD=Math.max(80,Math.round((am.atk*18+a.level*20)*(0.8+Math.random()*.5)*(100/(100+dm.armor))));
-  const dmgToA=Math.max(55,Math.round((dm.atk*14+d.level*16)*(0.8+Math.random()*.5)*(100/(100+am.armor))));
-  d.hp=Math.max(0,d.hp-dmgToD); a.hp=Math.max(0,a.hp-dmgToA);
-  a.lastEnemy=d.id; d.lastEnemy=a.id; s.totalBattles++;
-  let winner=ap>=dp?a:d, loser=winner===a?d:a;
-  if(d.hp===0) {winner=a;loser=d;}
-  if(a.hp===0) {winner=d;loser=a;}
-  winner.kills++;
-  winner.exp+=25+Math.floor(Math.random()*31);
-  if(winner.exp>=100+winner.level*40){winner.exp=0;winner.level++;}
-  if(loser.hp<=0){
-    const lootMoney=Math.floor(loser.money*.60), burnMoney=Math.floor(loser.money*.25), recycleMoney=loser.money-lootMoney-burnMoney;
-    const lootOre=Math.floor(loser.ore*.55), burnOre=Math.floor(loser.ore*.20), recycleOre=loser.ore-lootOre-burnOre;
-    winner.money+=lootMoney; winner.ore+=lootOre;
-    s.burned.currency+=burnMoney; s.burned.ore+=burnOre;
-    s.treasury.currency+=recycleMoney; s.treasury.ore+=recycleOre;
-    loser.status='死亡'; loser.losses++; s.totalDeaths++; s.deadCount++;
-    addHistory(s,`${winner.name} 擊破 ${loser.name}；部分資源遭永久銷毀。`);
-    return loser.id;
-  }
-  addHistory(s,`${a.name} 與 ${d.name} 交戰，${winner.name} 取得優勢。`);
-  return null;
-}
-
-function actNPC(s,n){
-  n.ageBlocks++;
-  if((n.archetype==='guardian'||n.archetype==='merchant')&&repair(s,n))return;
-  if(n.hp<n.maxHp*.35&&repair(s,n))return;
-  if(n.archetype==='merchant'||Math.random()<.28){harvest(s,n);return;}
-  const targets=s.npcs.filter(x=>x.id!==n.id&&x.status==='存活');
-  if(!targets.length){harvest(s,n);return;}
-  let d=null;
-  if(n.archetype==='revenge'&&n.lastEnemy)d=targets.find(x=>x.id===n.lastEnemy)||null;
-  if(n.archetype==='raider')d=[...targets].sort((x,y)=>(y.money+y.ore*20)-(x.money+x.ore*20))[0];
-  if(n.archetype==='opportunist')d=[...targets].sort((x,y)=>(x.hp/x.maxHp)-(y.hp/y.maxHp))[0];
-  if(!d)d=pick(targets);
-  return fight(s,n,d);
-}
-
-function wealthConcentration(s){
-  const values=s.npcs.map(n=>Math.max(0,n.money)).sort((a,b)=>b-a);
-  const total=values.reduce((a,b)=>a+b,0)+s.treasury.currency;
-  if(!total)return 1;
-  return values.slice(0,10).reduce((a,b)=>a+b,0)/total;
-}
-
-function updateHealth(s,activity){
-  const pop=s.npcs.length;
-  const concentration=wealthConcentration(s);
-  const currencyRemaining=(GENESIS_WORLD.economy.totalCurrencyCap-s.issued.currency)/GENESIS_WORLD.economy.totalCurrencyCap;
-  let h=100;
-  if(pop<10)h-=45; else if(pop<30)h-=20;
-  if(concentration>.90)h-=40; else if(concentration>.75)h-=20; else if(concentration>.60)h-=8;
-  if(activity===0)h-=20;
-  if(currencyRemaining<.01&&s.treasury.currency<1000)h-=18;
-  s.health=clamp(Math.round(h),0,100);
-  if(s.health<GENESIS_WORLD.health.collapseBelow)s.lowHealthStreak++;else s.lowHealthStreak=0;
-}
-
-function collapseAndRebirth(s){
-  const top=[...s.npcs].sort((a,b)=>(b.kills*100+b.level)-(a.kills*100+a.level))[0];
-  s.museum.unshift({
-    epoch:s.epoch,
-    name:s.epochName,
-    endedAt:Date.now(),
-    blocks:s.blockHeight,
-    totalBirths:s.totalBirths,
-    totalDeaths:s.totalDeaths,
-    totalBattles:s.totalBattles,
-    strongest:top?{name:top.name,kills:top.kills,level:top.level,mechName:top.mechName}:null,
-    reason:'世界健康度長期低於崩塌門檻'
-  });
-  s.museum=s.museum.slice(0,20);
-  const oldEpoch=s.epoch;
-  const fresh=initialState();
-  fresh.epoch=oldEpoch+1;
-  fresh.epochName=`WORLD ${fresh.epoch} — Rebirth`;
-  fresh.museum=s.museum;
-  addHistory(fresh,`WORLD ${oldEpoch} 文明終結；WORLD ${fresh.epoch} 已重新創世。`);
-  return fresh;
-}
-
-function publicState(s){
-  const top=[...s.npcs].sort((a,b)=>(b.kills*100+b.level)-(a.kills*100+a.level)).slice(0,12);
-  return {
-    epoch:s.epoch,epochName:s.epochName,createdAt:s.createdAt,blockHeight:s.blockHeight,nextBlockAt:s.nextBlockAt,lastBlockAt:s.lastBlockAt,
-    population:s.npcs.length,deadCount:s.deadCount,health:s.health,lowHealthStreak:s.lowHealthStreak,
-    treasury:s.treasury,issued:s.issued,burned:s.burned,totalBattles:s.totalBattles,totalBirths:s.totalBirths,totalDeaths:s.totalDeaths,
-    topNPCs:top,history:s.history.slice(0,30),museum:s.museum.slice(0,10),
-    caps:{currency:GENESIS_WORLD.economy.totalCurrencyCap,ore:GENESIS_WORLD.economy.totalOreCap,core:GENESIS_WORLD.economy.totalCoreCap}
-  };
-}
-
+const ARCHETYPES=[['aggressive','好戰型'],['raider','掠奪型'],['merchant','商人型'],['guardian','保守型'],['revenge','復仇型'],['opportunist','機會主義型']];
+function mech(id){return mechById(id)||MECHS[0];}
+function enRegen(m){return +(0.42+m.cooling*.018+m.en/1100).toFixed(3);}
+function hpRegen(m){return +(0.035+m.cooling*.0022).toFixed(3);}
+function atkNeed(m){return Math.ceil(m.en*.5);}
+function restoreCost(a){const m=mech(a.mechId);return Math.max(120,Math.ceil(Math.max(0,m.hp-a.hp)*.18+Math.max(0,m.en-a.en)*3.2));}
+function rewardAt(block){const era=Math.floor(Math.max(0,block-1)/HALVING_BLOCKS);return{era,currency:Math.max(1,Math.floor(1000/2**era)),ore:Math.max(1,Math.floor(100/2**era)),core:Math.max(0,Math.floor(1/2**era))};}
+function spawnChance(pop){if(pop>=HARD_CAP)return 0;if(pop<=COMFORT_POP)return .92;if(pop>=SOFT_CAP)return .10;return .92-((pop-COMFORT_POP)/(SOFT_CAP-COMFORT_POP))*.82;}
+function newAI(seq,t=now()){const m=pick(MECHS),[archetype,archetypeName]=pick(ARCHETYPES);return{id:`A:${seq}`,type:'ai',name:`AI-${String(seq).padStart(4,'0')}`,archetype,archetypeName,mechId:m.id,hp:m.hp,en:m.en,money:120+Math.floor(Math.random()*180),ore:Math.floor(Math.random()*5),core:0,wins:0,losses:0,alive:true,destroyedUntil:0,cooldownUntil:0,lastUpdate:t,lastAttackedAt:0,lastTargetId:null,bornBlock:0};}
+function newHuman(uid,name,t=now()){const m=MECHS[0];return{id:`H:${uid}`,userId:uid,type:'human',name,archetype:'human',archetypeName:'真人駕駛員',mechId:m.id,hp:m.hp,en:m.en,money:500,ore:0,core:0,wins:0,losses:0,alive:true,destroyedUntil:0,cooldownUntil:0,lastUpdate:t,lastAttackedAt:0,lastTargetId:null,joinedAt:t};}
+function recover(a,t=now()){const m=mech(a.mechId),dt=Math.max(0,(t-(a.lastUpdate||t))/1000);if(!a.alive){if(a.type==='human'&&a.destroyedUntil&&t>=a.destroyedUntil){a.alive=true;a.destroyedUntil=0;a.hp=Math.max(1,Math.round(m.hp*.3));a.en=Math.round(m.en*.5);}a.lastUpdate=t;return a;}a.en=clamp(a.en+dt*enRegen(m),0,m.en);if(t-(a.lastAttackedAt||0)>30000)a.hp=clamp(a.hp+dt*hpRegen(m),1,m.hp);a.lastUpdate=t;return a;}
+function view(a){if(!a)return null;const x=structuredClone(a),m=mech(x.mechId);recover(x);return{id:x.id,type:x.type,name:x.name,archetypeName:x.archetypeName,mechId:x.mechId,mechName:m.name,mechClass:m.class,art:m.art,hp:Math.round(x.hp),maxHp:m.hp,en:Math.round(x.en),maxEn:m.en,energyRegenPerSec:enRegen(m),hpRegenPerSec:hpRegen(m),attackAtEnergy:atkNeed(m),attackReady:x.alive&&x.en>=atkNeed(m)&&x.cooldownUntil<=now(),emergencyCost:restoreCost(x),money:Math.floor(x.money),ore:Math.floor(x.ore),core:Math.floor(x.core),wins:x.wins,losses:x.losses,alive:x.alive,destroyedUntil:x.destroyedUntil,cooldownUntil:x.cooldownUntil};}
+function health(s){const actors=Object.values(s.actors).filter(a=>a.alive),pop=clamp(actors.length/80*100,0,100),reserve=clamp((s.reserve.currency/25000+s.reserve.ore/2500)*25,0,100),all=Object.values(s.actors),cir=all.reduce((z,a)=>z+(a.money||0),0),rich=all.map(a=>a.money||0).sort((a,b)=>b-a).slice(0,10).reduce((a,b)=>a+b,0),eq=clamp(100-(cir?rich/cir:0)*80,0,100);return Math.round(pop*.35+reserve*.35+eq*.30);}
+function initialState(){const t=now(),s={version:3,epoch:1,block:0,createdAt:t,nextBlockAt:t+BLOCK_MS,seq:START_AI+1,reserve:{currency:25000,ore:2500,core:24},emitted:{currency:25000,ore:2500,core:24},burned:{currency:0,ore:0,core:0},health:100,lowHealthBlocks:0,actors:{},events:[],museum:[]};for(let i=1;i<=START_AI;i++){const a=newAI(i,t);s.actors[a.id]=a;}s.events.push({t,block:0,text:'WORLD I Genesis 公版世界啟動，24 名 AI 駕駛員甦醒。',kind:'epoch'});return s;}
 export class GenesisWorld{
-  constructor(ctx,env){
-    this.ctx=ctx;this.env=env;this.state=null;
-    ctx.blockConcurrencyWhile(async()=>{
-      this.state=await ctx.storage.get('world');
-      if(!this.state){this.state=initialState();await ctx.storage.put('world',this.state);}
-      const alarm=await ctx.storage.getAlarm();
-      if(alarm===null){this.state.nextBlockAt=nextBoundary();await ctx.storage.put('world',this.state);await ctx.storage.setAlarm(this.state.nextBlockAt);}
-    });
-  }
-  async fetch(req){
-    const p=new URL(req.url).pathname;
-    if(p==='/state')return json(publicState(this.state));
-    return json({error:'找不到 Genesis API'},404);
-  }
-  async alarm(){
-    let s=this.state||await this.ctx.storage.get('world')||initialState();
-    s.blockHeight++;
-    s.lastBlockAt=Date.now();
-    const reward=rewardAt(s.blockHeight), emitted=distributeEmission(s,reward);
-    maybeBirth(s);
-    let activity=0; const dead=new Set();
-    const actors=[...s.npcs].sort(()=>Math.random()-.5).slice(0,GENESIS_WORLD.population.actionsPerBlock);
-    for(const n of actors){if(dead.has(n.id)||n.status!=='存活')continue;const killed=actNPC(s,n);activity++;if(killed)dead.add(killed);}
-    if(dead.size)s.npcs=s.npcs.filter(n=>!dead.has(n.id));
-    updateHealth(s,activity);
-    addHistory(s,`區塊 #${s.blockHeight} 完成：發行 ${emitted.currency} G / 礦石 ${emitted.ore} / 核心 ${emitted.core}；人口 ${s.npcs.length}；健康 ${s.health}。`);
-    if(s.lowHealthStreak>=GENESIS_WORLD.health.collapseBlocks)s=collapseAndRebirth(s);
-    s.nextBlockAt=Date.now()+GENESIS_WORLD.blockIntervalMs;
-    this.state=s;
-    await this.ctx.storage.put('world',s);
-    await this.ctx.storage.setAlarm(s.nextBlockAt);
-  }
+  constructor(ctx,env){this.ctx=ctx;this.env=env;this.state=null;ctx.blockConcurrencyWhile(()=>this.load());}
+  async load(){this.state=await this.ctx.storage.get('world-public-v3');if(!this.state){this.state=initialState();await this.save();await this.ctx.storage.setAlarm(this.state.nextBlockAt);}else if(await this.ctx.storage.getAlarm()===null)await this.ctx.storage.setAlarm(this.state.nextBlockAt||now()+BLOCK_MS);}
+  async save(){this.state.health=health(this.state);await this.ctx.storage.put('world-public-v3',this.state);}
+  event(text,data={}){this.state.events.unshift({t:now(),block:this.state.block,text,...data});this.state.events=this.state.events.slice(0,100);}
+  emit(){const r=rewardAt(this.state.block);for(const k of ['currency','ore','core']){const x=Math.max(0,Math.min(CAP[k]-this.state.emitted[k],r[k]));this.state.emitted[k]+=x;this.state.reserve[k]+=x;}return r;}
+  mine(a){const g=Math.min(this.state.reserve.currency,30+Math.floor(Math.random()*71)),o=Math.min(this.state.reserve.ore,1+Math.floor(Math.random()*5));this.state.reserve.currency-=g;this.state.reserve.ore-=o;a.money+=g;a.ore+=o;return{g,o};}
+  attack(a,d){const t=now();recover(a,t);recover(d,t);const am=mech(a.mechId),dm=mech(d.mechId),need=atkNeed(am);if(!a.alive)return{ok:false,error:'機體正在大修'};if(a.cooldownUntil>t)return{ok:false,error:'武裝冷卻中'};if(a.en<need)return{ok:false,error:`能源需恢復至 50%（${need}/${am.en}）`};if(!d.alive)return{ok:false,error:'目標已被擊毀'};a.en=Math.max(0,a.en-need);a.cooldownUntil=t+12000;d.lastAttackedAt=t;a.lastTargetId=d.id;const hit=clamp(.62+(am.aim-dm.speed)*.006,.30,.92),raw=(170+am.atk*8)*(.86+Math.random()*.28),dmg=Math.round(raw*(100/(100+dm.armor*1.8))*(Math.random()<hit?1:.28));d.hp=Math.max(0,d.hp-dmg);let destroyed=false,loot=0;if(d.hp<=0){destroyed=true;d.losses++;a.wins++;loot=Math.min(d.money,Math.floor(80+Math.random()*180));d.money-=loot;a.money+=loot;if(d.type==='ai'){d.alive=false;const recycle=Math.floor(d.money*.35);this.state.reserve.currency+=recycle;d.money-=recycle;}else{d.alive=false;d.destroyedUntil=t+10*60*1000;}}this.event(`${a.name} 攻擊 ${d.name}，造成 ${dmg} 傷害${destroyed?'並擊毀目標':''}。`,{kind:'battle',attackerId:a.id,defenderId:d.id,dmg,destroyed});return{ok:true,dmg,destroyed,loot};}
+  aiTurn(a){recover(a);if(!a.alive)return;const targets=Object.values(this.state.actors).filter(x=>x.id!==a.id&&x.alive),m=mech(a.mechId),can=a.en>=atkNeed(m)&&a.cooldownUntil<=now(),bias=a.archetype==='aggressive'?.78:a.archetype==='raider'?.62:a.archetype==='revenge'?.68:a.archetype==='guardian'?.28:a.archetype==='merchant'?.18:.48;if(can&&targets.length&&Math.random()<bias){let d=a.archetype==='revenge'&&a.lastTargetId?this.state.actors[a.lastTargetId]:null;if(!d||!d.alive)d=pick(targets);this.attack(a,d);}else if(this.state.reserve.currency>0||this.state.reserve.ore>0)this.mine(a);}
+  spawn(){const count=Object.values(this.state.actors).filter(a=>a.type==='ai'&&a.alive).length;if(Math.random()>spawnChance(count))return;const a=newAI(this.state.seq++);a.bornBlock=this.state.block;this.state.actors[a.id]=a;this.event(`${a.name} 在 Block #${this.state.block} 誕生，駕駛 ${mech(a.mechId).name}。`,{kind:'birth',actorId:a.id});}
+  collapse(){this.state.health=health(this.state);this.state.lowHealthBlocks=this.state.health<5?this.state.lowHealthBlocks+1:0;if(this.state.lowHealthBlocks<72)return;const summary={epoch:this.state.epoch,endedAt:now(),blocks:this.state.block,health:this.state.health,reason:'世界健康度連續 72 區塊低於 5'};const humans=Object.values(this.state.actors).filter(a=>a.type==='human').map(a=>({userId:a.userId,name:a.name})),museum=[summary,...this.state.museum].slice(0,20),epoch=this.state.epoch+1;this.state=initialState();this.state.epoch=epoch;this.state.museum=museum;for(const h of humans)this.state.actors[`H:${h.userId}`]=newHuman(h.userId,h.name);this.event(`WORLD ${epoch} 已完成創世重啟。`,{kind:'epoch'});}
+  async tick(){this.state.block++;const r=this.emit();this.spawn();const ais=Object.values(this.state.actors).filter(a=>a.type==='ai'&&a.alive);for(const a of ais)this.aiTurn(a);this.collapse();this.state.nextBlockAt=now()+BLOCK_MS;if(this.state.block%6===0)this.event(`Block #${this.state.block} 完成。Era ${r.era}，區塊釋出 ${r.currency} G / ${r.ore} 礦石。`,{kind:'block'});await this.save();await this.ctx.storage.setAlarm(this.state.nextBlockAt);}
+  async alarm(){await this.tick();}
+  human(uid){return this.state.actors[`H:${uid}`]||null;}
+  public(uid=null){const actors=Object.values(this.state.actors),living=actors.filter(a=>a.alive),r=rewardAt(Math.max(1,this.state.block));return{epoch:this.state.epoch,epochName:`WORLD ${this.state.epoch} — ${this.state.epoch===1?'Genesis':'Rebirth'}`,blockHeight:this.state.block,nextBlockAt:this.state.nextBlockAt,health:this.state.health,reserve:this.state.reserve,issued:this.state.emitted,burned:this.state.burned,era:r.era,currentBlockReward:r,population:{total:actors.length,living:living.length,ai:living.filter(a=>a.type==='ai').length,human:living.filter(a=>a.type==='human').length},myActor:uid?view(this.human(uid)):null,actors:living.slice(0,120).map(view),events:this.state.events.slice(0,40),museum:this.state.museum,rules:{blockMinutes:10,attackEnergyPercent:50,humanRepairMinutes:10,hardPopulationCap:HARD_CAP,currencyCap:CAP.currency,oreCap:CAP.ore,coreCap:CAP.core,halvingEveryBlocks:HALVING_BLOCKS},mechs:MECHS.map(m=>({...m,energyRegenPerSec:enRegen(m),hpRegenPerSec:hpRegen(m),attackAtEnergy:atkNeed(m)}))};}
+  async fetch(req){const u=new URL(req.url),uid=+req.headers.get('x-user-id')||0,username=req.headers.get('x-username')||'';if(u.pathname==='/state')return json(this.public(uid||null));if(u.pathname==='/join'&&req.method==='POST'){if(!uid)return json({error:'請先登入主帳號'},401);let a=this.human(uid);if(!a){a=newHuman(uid,username);this.state.actors[a.id]=a;this.state.emitted.currency=Math.min(CAP.currency,this.state.emitted.currency+500);this.event(`${username} 進入 Genesis 世界。`,{kind:'join',actorId:a.id});await this.save();}return json({ok:true,state:this.public(uid)});}if(u.pathname==='/action'&&req.method==='POST'){if(!uid)return json({error:'請先登入主帳號'},401);const a=this.human(uid);if(!a)return json({error:'請先加入 Genesis 世界'},400);recover(a);const b=await req.json().catch(()=>({}));if(b.action==='mine'){if(a.cooldownUntil>now())return json({error:'行動冷卻中'},400);const x=this.mine(a);a.cooldownUntil=now()+30000;this.event(`${a.name} 採集取得 ${x.g} G / ${x.o} 礦石。`,{kind:'mine',actorId:a.id});}else if(b.action==='attack'){const d=this.state.actors[String(b.targetId||'')];if(!d||d.id===a.id)return json({error:'無效目標'},400);const r=this.attack(a,d);if(!r.ok)return json({error:r.error},400);}else if(b.action==='restore'){const cost=restoreCost(a);if(a.money<cost)return json({error:`資金不足，需要 ${cost} G`},400);a.money-=cost;this.state.burned.currency+=cost;const m=mech(a.mechId);a.alive=true;a.destroyedUntil=0;a.hp=m.hp;a.en=m.en;a.lastUpdate=now();this.event(`${a.name} 支付 ${cost} G 進行緊急整備。`,{kind:'restore',actorId:a.id});}else if(b.action==='selectMech'){const m=mech(String(b.mechId||''));a.mechId=m.id;a.hp=m.hp;a.en=m.en;a.lastUpdate=now();}else return json({error:'未知操作'},400);await this.save();return json({ok:true,state:this.public(uid)});}return json({error:'找不到 Genesis API'},404);}
 }
