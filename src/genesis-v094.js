@@ -86,8 +86,13 @@ export class GenesisWorld extends BaseGenesisWorld{
     const successChance=clamp(d.baseSuccess+Math.min(.12,up*.004)+Math.max(0,hpRatio-.5)*.06,.35,.98);
     const success=a.hp>0&&Math.random()<successChance;
     let reward={currency:0,ore:0,crystal:0,alloy:0,data:0,core:0};
-    if(success){reward=this.rollReward(d);for(const [k,v] of Object.entries(reward))a[k]=(a[k]||0)+v;a.dungeonClears++;}
+    if(success){
+      reward=this.rollReward(d);
+      for(const [k,v] of Object.entries(reward)){const prop=k==='currency'?'money':k;a[prop]=(a[prop]||0)+v;}
+      a.dungeonClears++;
+    }
     if(a.hp<=0){a.alive=false;a.destroyedUntil=t+10*60*1000;a.hp=0;}
+    a.lastUpdate=t;
     const result={id:d.id,name:d.name,t,success,damage,enCost:view.enCost,reward,successChance:Math.round(successChance*100),destroyed:!a.alive};
     a.lastDungeonResult=result;
     const rewardText=Object.entries(reward).filter(([,v])=>v>0).map(([k,v])=>`${({currency:'G',ore:'礦石',crystal:'晶體',alloy:'合金',data:'資料',core:'核心'})[k]} ${v}`).join(' / ');
@@ -121,6 +126,7 @@ export class GenesisWorld extends BaseGenesisWorld{
       const body=await req.clone().json().catch(()=>({}));
       if(body.action==='runDungeon'){
         const a=this.human(uid);if(!a)return json({error:'請先加入 Genesis 世界'},400);
+        const snap=super.public(uid)?.myActor;if(snap){a.hp=snap.hp;a.en=snap.en;a.lastUpdate=now();}
         const result=this.runDungeon(a,String(body.dungeonId||''));
         if(!result.ok)return json({error:result.error},400);
         await this.save();
