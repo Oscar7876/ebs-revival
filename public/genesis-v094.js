@@ -1,4 +1,15 @@
-/* Genesis v0.9.4 hotfix.2: shop fallback + dungeon UI */
+/* Genesis v0.9.4 hotfix.5: UI compatibility + shop fallback + dungeon UI */
+function v094EnsureLegacyDom(){
+  // v0.7 shared renderHangar still writes to #weaponGrid. v0.9.3 moved weapons to
+  // a dedicated shop, so keep a hidden compatibility host to prevent render()
+  // from crashing after every action.
+  if(!document.querySelector('#weaponGrid')){
+    const panel=document.querySelector('#tab-hangar .panel');
+    if(panel){const el=document.createElement('div');el.id='weaponGrid';el.hidden=true;el.setAttribute('aria-hidden','true');panel.appendChild(el);}
+  }
+}
+v094EnsureLegacyDom();
+
 const V094_FALLBACK_WEAPONS=[
   {id:'rifle',name:'光束步槍',typeLabel:'光束',power:680,hits:3,acc:86,speed:82,en:24,heat:15,weight:16,price:0,effect:'均衡型'},
   {id:'mg',name:'90mm 機關槍',typeLabel:'實彈',power:175,hits:12,acc:78,speed:94,en:8,heat:27,weight:11,price:3200,effect:'多段命中'},
@@ -52,5 +63,5 @@ async function v094RunDungeon(btn,id){
   try{const r=await api('/api/genesis/action',{method:'POST',body:JSON.stringify({action:'runDungeon',dungeonId:id})});STATE=r.state;snapshotAt=Date.now();render();const gain=r.reward||{};const loot=[['G',gain.currency],['礦石',gain.ore],['晶體',gain.crystal],['合金',gain.alloy],['資料',gain.data],['核心',gain.core]].filter(([,v])=>v>0).map(([k,v])=>`${k} +${v}`).join(' / ');msg('#dungeonMessage',`${r.success?'✅ 通關':'❌ 挑戰失敗'}｜🔋 EN -${r.enCost}｜❤️ HP -${r.damage}${r.success?`｜🎁 ${loot||'世界儲備不足，未取得資源'}`:''}${r.destroyed?'｜💥 機體重創進入大修':''}`,!r.success);}catch(e){msg('#dungeonMessage',`❌ ${e.message}`,true);}finally{btn.disabled=false;btn.textContent=old;}
 }
 const v094OldRender=render;
-render=function(){v094OldRender();try{v094RenderShop();v094RenderDungeons();}catch(e){console.error('Genesis v0.9.4 render',e);}};
-setTimeout(()=>{try{if(STATE){v094RenderShop();v094RenderDungeons();}}catch(e){console.error('Genesis v0.9.4 init',e);}},0);
+render=function(){v094EnsureLegacyDom();v094OldRender();try{v094RenderShop();v094RenderDungeons();}catch(e){console.error('Genesis v0.9.4 render',e);}};
+setTimeout(()=>{try{v094EnsureLegacyDom();if(STATE){v094RenderShop();v094RenderDungeons();}}catch(e){console.error('Genesis v0.9.4 init',e);}},0);
