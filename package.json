@@ -1,11 +1,12 @@
 {
   "name": "ebs-revival-cloudflare",
   "private": true,
-  "version": "0.9.4-hotfix.4",
+  "version": "0.9.4-hotfix.5",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "db:migrate": "wrangler d1 migrations apply DB --remote",
+    "test:genesis": "node tests/genesis-smoke.mjs",
     "validate": "wrangler deploy --dry-run --outdir .wrangler-dry-run",
     "deploy": "wrangler deploy"
   },
