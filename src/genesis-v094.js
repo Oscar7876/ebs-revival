@@ -6,12 +6,12 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const json=(x,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 
 const DUNGEONS=[
-  {id:'patrol',name:'外環巡邏線',tier:1,desc:'低風險巡邏任務，適合補充 Genesis G、礦石與少量戰術資料。',enPct:.18,hpMinPct:.30,damageMin:.025,damageMax:.055,cooldown:45_000,baseSuccess:.96,reward:{currency:[35,80],ore:[1,4],data:[0,2]}},rare:'小量戰術資料'},
-  {id:'ruins',name:'都市廢墟搜索',tier:2,desc:'深入崩毀都市搜索機體殘骸，合金產出較高。',enPct:.25,hpMinPct:.38,damageMin:.045,damageMax:.09,cooldown:70_000,baseSuccess:.90,reward:{currency:[45,100],ore:[2,5],alloy:[0,2],data:[0,3]}},rare:'稀有合金'},
-  {id:'depot',name:'敵軍軍火庫',tier:3,desc:'突破守備系統奪取軍需，收益提高但機體損耗更明顯。',enPct:.34,hpMinPct:.46,damageMin:.065,damageMax:.125,cooldown:100_000,baseSuccess:.82,reward:{currency:[70,145],ore:[3,7],alloy:[1,3],data:[1,4]}},rare:'合金／戰術資料'},
-  {id:'storm',name:'能源風暴帶',tier:4,desc:'穿越高能粒子風暴採集晶體，能源消耗與受損風險都很高。',enPct:.44,hpMinPct:.55,damageMin:.085,damageMax:.16,cooldown:140_000,baseSuccess:.74,reward:{currency:[60,130],crystal:[4,10],data:[1,4],core:[0,1,.08]}},rare:'8% 機率核心'},
-  {id:'fortress',name:'失落軍事要塞',tier:5,desc:'高階戰鬥副本，適合取得合金、資料與大量 Genesis G。',enPct:.56,hpMinPct:.64,damageMin:.12,damageMax:.22,cooldown:190_000,baseSuccess:.66,reward:{currency:[120,240],ore:[4,9],alloy:[2,5],data:[3,8],core:[0,1,.13]}},rare:'13% 機率核心'},
-  {id:'corezone',name:'Genesis 核心禁區',tier:6,desc:'最高風險區域。需要良好機體狀態與強化，成功時可取得多種高階資源。',enPct:.70,hpMinPct:.76,damageMin:.18,damageMax:.32,cooldown:300_000,baseSuccess:.56,reward:{currency:[170,340],ore:[6,12],crystal:[5,12],alloy:[3,7],data:[5,11],core:[0,1,.25]}},rare:'25% 機率核心'}
+  {id:'patrol',name:'外環巡邏線',tier:1,desc:'低風險巡邏任務，適合補充 Genesis G、礦石與少量戰術資料。',enPct:.18,hpMinPct:.30,damageMin:.025,damageMax:.055,cooldown:45_000,baseSuccess:.96,reward:{currency:[35,80],ore:[1,4],data:[0,2]},rare:'小量戰術資料'},
+  {id:'ruins',name:'都市廢墟搜索',tier:2,desc:'深入崩毀都市搜索機體殘骸，合金產出較高。',enPct:.25,hpMinPct:.38,damageMin:.045,damageMax:.09,cooldown:70_000,baseSuccess:.90,reward:{currency:[45,100],ore:[2,5],alloy:[0,2],data:[0,3]},rare:'稀有合金'},
+  {id:'depot',name:'敵軍軍火庫',tier:3,desc:'突破守備系統奪取軍需，收益提高但機體損耗更明顯。',enPct:.34,hpMinPct:.46,damageMin:.065,damageMax:.125,cooldown:100_000,baseSuccess:.82,reward:{currency:[70,145],ore:[3,7],alloy:[1,3],data:[1,4]},rare:'合金／戰術資料'},
+  {id:'storm',name:'能源風暴帶',tier:4,desc:'穿越高能粒子風暴採集晶體，能源消耗與受損風險都很高。',enPct:.44,hpMinPct:.55,damageMin:.085,damageMax:.16,cooldown:140_000,baseSuccess:.74,reward:{currency:[60,130],crystal:[4,10],data:[1,4],core:[0,1,.08]},rare:'8% 機率核心'},
+  {id:'fortress',name:'失落軍事要塞',tier:5,desc:'高階戰鬥副本，適合取得合金、資料與大量 Genesis G。',enPct:.56,hpMinPct:.64,damageMin:.12,damageMax:.22,cooldown:190_000,baseSuccess:.66,reward:{currency:[120,240],ore:[4,9],alloy:[2,5],data:[3,8],core:[0,1,.13]},rare:'13% 機率核心'},
+  {id:'corezone',name:'Genesis 核心禁區',tier:6,desc:'最高風險區域。需要良好機體狀態與強化，成功時可取得多種高階資源。',enPct:.70,hpMinPct:.76,damageMin:.18,damageMax:.32,cooldown:300_000,baseSuccess:.56,reward:{currency:[170,340],ore:[6,12],crystal:[5,12],alloy:[3,7],data:[5,11],core:[0,1,.25]},rare:'25% 機率核心'}
 ];
 
 function ensureDungeonActor(a){
