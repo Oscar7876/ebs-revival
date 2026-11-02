@@ -21,5 +21,7 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Smoke test Genesis actions
+        run: npm run test:genesis
       - name: Validate Worker bundle and Wrangler config
         run: npm run validate
