@@ -1,15 +1,16 @@
 {
   "name": "ebs-revival-cloudflare",
   "private": true,
-  "version": "0.9.4-hotfix.1",
+  "version": "0.9.4-hotfix.3",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "db:migrate": "wrangler d1 migrations apply DB --remote",
+    "validate": "wrangler deploy --dry-run --outdir .wrangler-dry-run",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^4.156.0"
+    "wrangler": "4.102.0"
   },
   "cloudflare": {
     "bindings": {
