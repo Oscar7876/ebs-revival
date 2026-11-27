@@ -23,5 +23,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Smoke test Genesis actions
         run: npm run test:genesis
+      - name: Assert Genesis public world is fully suspended
+        run: node tests/genesis-disabled-smoke.mjs
       - name: Validate Worker bundle and Wrangler config
         run: npm run validate
