@@ -1,0 +1,3 @@
+# Temporary site-wide search de-indexing policy for Cloudflare Static Assets
+/*
+  X-Robots-Tag: noindex, nofollow, noimageindex, nosnippet

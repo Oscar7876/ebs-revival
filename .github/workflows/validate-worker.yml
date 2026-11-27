@@ -25,5 +25,7 @@ jobs:
         run: npm run test:genesis
       - name: Assert Genesis public world is fully suspended
         run: node tests/genesis-disabled-smoke.mjs
+      - name: Verify site-wide search crawler pause
+        run: node tests/no-search-crawl-smoke.mjs
       - name: Validate Worker bundle and Wrangler config
         run: npm run validate

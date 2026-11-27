@@ -1,0 +1,3 @@
+# Temporary full-site crawl pause (2026-11-27)
+User-agent: *
+Disallow: /
